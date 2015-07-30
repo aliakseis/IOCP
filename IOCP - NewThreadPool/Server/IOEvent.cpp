@@ -2,7 +2,7 @@
 #include "Client.h"
 #include "Packet.h"
 
-#include "../CachedAlloc.h"
+#include "common/CachedAlloc.h"
 
 namespace {
 

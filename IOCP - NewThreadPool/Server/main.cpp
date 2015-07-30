@@ -3,8 +3,8 @@
 #include <iostream>
 using namespace std;
 
-#include "..\\Log.h"
-#include "..\\Network.h"
+#include "common/Log.h"
+#include "common/Network.h"
 #include "Server.h"
 
 void main(int argc, char* argv[])

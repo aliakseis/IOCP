@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "..\TSingleton.h"
+#include "common/TSingleton.h"
 
 class Client;
 

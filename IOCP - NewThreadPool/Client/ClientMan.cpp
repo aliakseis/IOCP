@@ -1,7 +1,7 @@
 #include "ClientMan.h"
 #include "Client.h"
 
-#include "..\Log.h"
+#include "common/Log.h"
 
 #include <cassert>
 

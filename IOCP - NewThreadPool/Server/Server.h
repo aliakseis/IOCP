@@ -3,7 +3,7 @@
 #include <winsock2.h>
 #include <vector>
 
-#include "..\TSingleton.h"
+#include "common/TSingleton.h"
 
 class Client;
 class Packet;

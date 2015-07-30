@@ -3,8 +3,8 @@
 #include "Packet.h"
 #include "IOEvent.h"
 
-#include "..\Log.h"
-#include "..\Network.h"
+#include "common/Log.h"
+#include "common/Network.h"
 #include <iostream>
 #include <cassert>
 #include <algorithm>

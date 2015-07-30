@@ -1,10 +1,10 @@
 #include "Client.h"
 #include "ClientMan.h"
 
-#include "..\Log.h"
-#include "..\Network.h"
+#include "common/Log.h"
+#include "common/Network.h"
 
-#include "../CachedAlloc.h"
+#include "common/CachedAlloc.h"
 
 #include <cassert>
 #include <iostream>

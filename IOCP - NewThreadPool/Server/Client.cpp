@@ -1,8 +1,8 @@
 #include "Client.h"
-#include "..\Log.h"
-#include "..\Network.h"
+#include "common/Log.h"
+#include "common/Network.h"
 
-#include "../CachedAlloc.h"
+#include "common/CachedAlloc.h"
 
 namespace {
 
