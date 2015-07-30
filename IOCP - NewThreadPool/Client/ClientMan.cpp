@@ -15,16 +15,16 @@
 }
 
 
-ClientMan::ClientMan(void)
+ClientMan::ClientMan()
 {
 	InitializeCriticalSection(&m_CSForClients);
 }
 
-ClientMan::~ClientMan(void)
+ClientMan::~ClientMan()
 {
 	RemoveClients();
 
-	EnterCriticalSection(&m_CSForClients);
+    DeleteCriticalSection(&m_CSForClients);
 }
 
 
@@ -86,7 +86,7 @@ void ClientMan::RemoveClients()
 	LeaveCriticalSection(&m_CSForClients);
 }
 
-void ClientMan::Send(const string& msg)
+void ClientMan::Send(const std::string& msg)
 {
 	EnterCriticalSection(&m_CSForClients);
 

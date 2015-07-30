@@ -48,8 +48,8 @@ private:
 	void Echo(Packet* packet);
 
 private:
-	Server& operator=(Server& rhs);
-	Server(const Server& rhs);
+    Server& operator=(const Server&) = delete;
+    Server(const Server&) = delete;
 
 private:
 	TP_IO* m_pTPIO;

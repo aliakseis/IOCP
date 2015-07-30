@@ -2,11 +2,13 @@
 #include <string>
 #include <iostream>
 #include <vector>
-using namespace std;
 
 #include "common/Log.h"
 #include "common/Network.h"
 #include "ClientMan.h"
+
+using std::string;
+using std::cin;
 
 void main(int argc, char* argv[])
 {

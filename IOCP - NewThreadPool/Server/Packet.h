@@ -22,8 +22,8 @@ public:
 private:
 	Packet();
 	~Packet();
-	Packet(const Packet& rhw);
-	Packet& operator=(const Packet& input);
+    Packet(const Packet&) = delete;
+    Packet& operator=(const Packet&) = delete;
 
 private:
 	Client* m_Sender;

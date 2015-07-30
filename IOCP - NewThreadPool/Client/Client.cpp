@@ -10,66 +10,66 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
 
 namespace
 {
-	class IOEvent
+
+class IOEvent
+{
+public:
+	enum Type
 	{
-	public:
-		enum Type
-		{
-			CONNECT,
-			RECV,
-			SEND,
-		};
-
-	public:
-		static IOEvent* Create(Client* clent, Type type);
-		static void Destroy(IOEvent* event);
-
-	public:
-		OVERLAPPED overlapped;
-		Client* client;
-		Type type;
-
-	private:
-		IOEvent();
-		~IOEvent();
-		IOEvent(const IOEvent& rhs);
-		IOEvent& operator=(IOEvent& rhs);
+		CONNECT,
+		RECV,
+		SEND,
 	};
 
-	// use thread-safe memory pool
-    CCachedAlloc eventAllocator(sizeof(IOEvent));
+public:
+	static IOEvent* Create(Client* clent, Type type);
+	static void Destroy(IOEvent* event);
 
-	/* static */ IOEvent* IOEvent::Create(Client* client, Type type)
-	{
-        IOEvent* event = static_cast<IOEvent*>(eventAllocator.get());
-		ZeroMemory(event, sizeof(IOEvent));
-		event->client = client;
-		event->type = type;
-		return event;
-	}
+public:
+	OVERLAPPED overlapped;
+	Client* client;
+	Type type;
 
-	/* static */ void IOEvent::Destroy(IOEvent* event)
-	{
-        eventAllocator.put(event);
-	}
+private:
+	IOEvent();
+	~IOEvent();
+    IOEvent(const IOEvent&) = delete;
+    IOEvent& operator=(const IOEvent&) = delete;
+};
 
-	void PrintConnectionInfo(SOCKET socket)
-	{
-		std::string serverIP, clientIP;
-		u_short serverPort = 0, clientPort = 0;
-		Network::GetLocalAddress(socket, clientIP, clientPort);
-		Network::GetRemoteAddress(socket, serverIP, serverPort);
+// use thread-safe memory pool
+CCachedAlloc eventAllocator(sizeof(IOEvent));
 
-		TRACE("Connection from ip[%s], port[%d] to ip[%s], port[%d] succeeded.", clientIP.c_str(), clientPort, serverIP.c_str(), serverPort);
-	}
+/* static */ IOEvent* IOEvent::Create(Client* client, Type type)
+{
+    IOEvent* event = static_cast<IOEvent*>(eventAllocator.get());
+	ZeroMemory(event, sizeof(IOEvent));
+	event->client = client;
+	event->type = type;
+	return event;
 }
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
+/* static */ void IOEvent::Destroy(IOEvent* event)
+{
+    eventAllocator.put(event);
+}
+
+void PrintConnectionInfo(SOCKET socket)
+{
+	std::string serverIP, clientIP;
+	u_short serverPort = 0, clientPort = 0;
+	Network::GetLocalAddress(socket, clientIP, clientPort);
+	Network::GetRemoteAddress(socket, serverIP, serverPort);
+
+	TRACE("Connection from ip[%s], port[%d] to ip[%s], port[%d] succeeded.", clientIP.c_str(), clientPort, serverIP.c_str(), serverPort);
+}
+
+} // namespace
+
+
 /* static */ void CALLBACK Client::IoCompletionCallback(PTP_CALLBACK_INSTANCE /* Instance */, PVOID /* Context */,
 														PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred, PTP_IO /* Io */)
 {
@@ -77,7 +77,7 @@ namespace
 	assert(event);
 	assert(event->client);
 
-	if ( false == ClientMan::Instance()->IsAlive(event->client) )
+	if ( !ClientMan::Instance()->IsAlive(event->client) )
 	{
 		// No client for this event.
 		IOEvent::Destroy(event);
@@ -120,23 +120,18 @@ namespace
 	IOEvent::Destroy(event);
 }
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
+
 Client::Client()
 : m_pTPIO(NULL), m_Socket(INVALID_SOCKET), m_State(WAIT)
 {
 }
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
 Client::~Client()
 {
 	Destroy();
 }
 
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
 bool Client::Create(short port)
 {	
 	assert(m_Socket == INVALID_SOCKET);
@@ -170,8 +165,6 @@ bool Client::Create(short port)
 	return true;
 }
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
 void Client::Destroy()
 {
 	if(m_State != CLOSED)

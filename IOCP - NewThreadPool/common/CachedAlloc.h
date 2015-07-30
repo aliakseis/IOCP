@@ -45,8 +45,8 @@ public:
 	}
 
 private:
-	CCachedAlloc(const CCachedAlloc&);
-	CCachedAlloc& operator = (const CCachedAlloc&);
+    CCachedAlloc(const CCachedAlloc&) = delete;
+    CCachedAlloc& operator = (const CCachedAlloc&) = delete;
 
 private:
 	size_t m_size;

@@ -4,7 +4,11 @@
 #include <windows.h>
 #include <iostream>
 #include <iomanip>
-using namespace std;
+
+using std::cout;
+using std::endl;
+using std::hex;
+using std::dec;
 
 namespace Log
 {
@@ -94,12 +98,14 @@ namespace Log
 	{
 		EnterCriticalSection(&logCS);
 
-		if(false == FreeLibrary(libModule))
+		if(!FreeLibrary(libModule))
 		{
 			ERROR_CODE(GetLastError(), "Log::CleanUp() - FreeLibrary() failed.");
 		}
 
-		DeleteCriticalSection(&logCS);
+        LeaveCriticalSection(&logCS);
+
+        DeleteCriticalSection(&logCS);
 	}
 
 	void EnableTrace(bool enable)

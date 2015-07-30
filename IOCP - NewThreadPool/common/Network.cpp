@@ -5,8 +5,7 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
-
+using std::stringstream;
 
 namespace
 {

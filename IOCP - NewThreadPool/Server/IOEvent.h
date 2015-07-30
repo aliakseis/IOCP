@@ -27,8 +27,8 @@ public:
 private:
 	IOEvent();
 	~IOEvent();
-	IOEvent& operator=(IOEvent& rhs);
-	IOEvent(const IOEvent& rhs);
+    IOEvent& operator=(const IOEvent&) = delete;
+    IOEvent(const IOEvent&) = delete;
 
 private:
 	OVERLAPPED m_Overlapped;

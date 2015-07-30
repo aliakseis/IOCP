@@ -1,11 +1,13 @@
 
 #include <string>
 #include <iostream>
-using namespace std;
 
 #include "common/Log.h"
 #include "common/Network.h"
 #include "Server.h"
+
+using std::string;
+using std::cin;
 
 void main(int argc, char* argv[])
 {

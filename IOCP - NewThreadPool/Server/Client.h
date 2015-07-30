@@ -32,10 +32,10 @@ public:
 	BYTE* GetRecvBuff() { return m_recvBuffer; }
 
 private:
-	Client(void);
-	~Client(void);
-	Client& operator=(Client& rhs);
-	Client(const Client& rhs);
+	Client();
+	~Client();
+    Client& operator=(const Client&) = delete;
+    Client(const Client&) = delete;
 
 private:
 	TP_IO* m_pTPIO;

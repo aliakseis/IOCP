@@ -46,8 +46,8 @@ public:
 	SOCKET GetSocket() { return m_Socket; }
 
 private:
-	Client(const Client& rhs);
-	Client& operator=(const Client& rhs);
+    Client(const Client&) = delete;
+    Client& operator=(const Client&) = delete;
 
 private:
 	TP_IO* m_pTPIO;

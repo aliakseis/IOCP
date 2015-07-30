@@ -9,11 +9,8 @@
 #include <cassert>
 #include <algorithm>
 
-using namespace std;
 
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
 /* static */ void CALLBACK Server::IoCompletionCallback(PTP_CALLBACK_INSTANCE /* Instance */, PVOID /* Context */,
 														PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred, PTP_IO /* Io */)
 {
@@ -103,9 +100,7 @@ void CALLBACK Server::WorkerProcessRecvPacket(PTP_CALLBACK_INSTANCE /* Instance 
 }
 
 
-//---------------------------------------------------------------------------------//
-//---------------------------------------------------------------------------------//
-Server::Server(void)
+Server::Server()
 : m_pTPIO(NULL),
   m_AcceptTPWORK(NULL),
   m_listenSocket(INVALID_SOCKET),
@@ -117,7 +112,7 @@ Server::Server(void)
 }
 
 
-Server::~Server(void)
+Server::~Server()
 {
 	Destroy();
 }
@@ -240,7 +235,7 @@ void Server::Destroy()
 
 void Server::PostAccept()
 {
-	// If the number of clients is too big, we can just stop posting aceept.
+	// If the number of clients is too big, we can just stop posting accept.
 	// That's one of the benefits from AcceptEx.
 	int count = m_MaxPostAccept - m_NumPostAccept;
 	if( count > 0 )
