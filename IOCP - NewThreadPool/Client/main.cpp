@@ -27,7 +27,7 @@ void main(int argc, char* argv[])
 
 	TRACE("Input : Server IP: %s, Port : %d, Max Clients : %i", serverIP, serverPort, maxClients);
 
-	if(Network::Initialize() == false)
+	if (!Network::Initialize())
 	{
 		return;
 	}

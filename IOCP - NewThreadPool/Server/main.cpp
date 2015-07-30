@@ -25,7 +25,7 @@ void main(int argc, char* argv[])
 
 	TRACE("Input : port : %d, max accept : %d", port, maxPostAccept);
 
-	if(Network::Initialize() == false)
+	if (!Network::Initialize())
 	{
 		ERROR_MSG("Network::Initialize() failed");
 		return;
@@ -33,7 +33,7 @@ void main(int argc, char* argv[])
 
 	Server::New();
 	
-	if(Server::Instance()->Create(port, maxPostAccept) == false)
+	if (!Server::Instance()->Create(port, maxPostAccept))
 	{
 		ERROR_MSG("Server::Create() failed");
 		Network::Deinitialize();

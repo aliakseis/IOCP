@@ -10,7 +10,7 @@ public:
 	{
 		if( m_Instance == 0 )
 		{
-			m_Instance = new T;
+			m_Instance = new T();
 		}
 	}
 

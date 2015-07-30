@@ -95,7 +95,7 @@ void ClientMan::Send(const std::string& msg)
 
 void ClientMan::PostRemoveClient(Client* client)
 {
-    if (TrySubmitThreadpoolCallback(ClientMan::WorkerRemoveClient, client, NULL) == false)
+    if (!TrySubmitThreadpoolCallback(ClientMan::WorkerRemoveClient, client, NULL))
     {
         ERROR_CODE(GetLastError(), "Could not start WorkerRemoveClient.");
 

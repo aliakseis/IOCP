@@ -247,8 +247,7 @@ void Server::PostAccept()
             assert(event);
 
             StartThreadpoolIo(m_pTPIO);
-            if (FALSE ==
-                Network::AcceptEx(m_listenSocket, client->GetSocket(), &event->GetOverlapped()))
+            if (!Network::AcceptEx(m_listenSocket, client->GetSocket(), &event->GetOverlapped()))
             {
                 int error = WSAGetLastError();
 
@@ -363,8 +362,7 @@ void Server::OnAccept(IOEvent* event)
     // the other IO notifications.
     // If adding client is fast enough, we can call it here but I assume it's slow.
     if (!m_ShuttingDown &&
-        TrySubmitThreadpoolCallback(Server::WorkerAddClient, event->GetClient(), &m_ClientTPENV) ==
-            false)
+        !TrySubmitThreadpoolCallback(Server::WorkerAddClient, event->GetClient(), &m_ClientTPENV))
     {
         ERROR_CODE(GetLastError(), "Could not start WorkerAddClient.");
 
@@ -388,10 +386,10 @@ void Server::OnRecv(IOEvent* event, DWORD dwNumberOfBytesTransfered)
     Packet* packet = Packet::Create(event->GetClient(), event->GetClient()->GetRecvBuff(),
                                     dwNumberOfBytesTransfered);
 
-    // If whatever game logics relying on the packet are fast enough, we can manage them here but I
+    // If whatever logics relying on the packet are fast enough, we can manage them here but
     // assume they are slow.
-    // I think it's better to request receiving ASAP and handle packets received in another thread.
-    if (TrySubmitThreadpoolCallback(Server::WorkerProcessRecvPacket, packet, NULL) == false)
+    // it's better to request receiving ASAP and handle packets received in another thread.
+    if (!TrySubmitThreadpoolCallback(Server::WorkerProcessRecvPacket, packet, NULL))
     {
         ERROR_CODE(GetLastError(), "Could not start WorkerProcessRecvPacket. call it directly.");
 
@@ -423,8 +421,7 @@ void Server::OnClose(IOEvent* event)
     // If whatever game logics about this event are fast enough, we can manage them here but I
     // assume they are slow.
     if (!m_ShuttingDown &&
-        TrySubmitThreadpoolCallback(Server::WorkerRemoveClient, event->GetClient(),
-                                    &m_ClientTPENV) == false)
+        !TrySubmitThreadpoolCallback(Server::WorkerRemoveClient, event->GetClient(), &m_ClientTPENV))
     {
         ERROR_CODE(GetLastError(), "can't start WorkerRemoveClient. call it directly.");
 
