@@ -28,6 +28,9 @@ public:
 	Client();
 	~Client();
 
+    Client(const Client&) = delete;
+    Client& operator=(const Client&) = delete;
+
 	bool Create(short port);
 	void Destroy();
 
@@ -44,10 +47,6 @@ public:
 
 	State GetState() { return m_State; }
 	SOCKET GetSocket() { return m_Socket; }
-
-private:
-    Client(const Client&) = delete;
-    Client& operator=(const Client&) = delete;
 
 private:
 	TP_IO* m_pTPIO;

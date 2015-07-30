@@ -18,8 +18,14 @@ public:
 	};
 
 public:
-	static Client* Create();
-	static void Destroy(Client* client);
+    Client();
+    ~Client();
+
+    Client& operator=(const Client&) = delete;
+    Client(const Client&) = delete;
+
+    bool Create();
+	void Destroy();
 
 public:
 	void SetTPIO(TP_IO* pTPIO) { m_pTPIO = pTPIO; }
@@ -30,12 +36,6 @@ public:
 
 	SOCKET GetSocket() { return m_Socket; }
 	BYTE* GetRecvBuff() { return m_recvBuffer; }
-
-private:
-	Client();
-	~Client();
-    Client& operator=(const Client&) = delete;
-    Client(const Client&) = delete;
 
 private:
 	TP_IO* m_pTPIO;

@@ -5,145 +5,141 @@
 
 #include <cassert>
 
-
-/* static */ void CALLBACK ClientMan::WorkerRemoveClient(PTP_CALLBACK_INSTANCE /* Instance */, PVOID Context)
+/* static */ void CALLBACK
+ClientMan::WorkerRemoveClient(PTP_CALLBACK_INSTANCE /* Instance */, PVOID Context)
 {
-	Client* client = static_cast<Client*>(Context);
-	assert(client);
+    Client* client = static_cast<Client*>(Context);
+    assert(client);
 
-	ClientMan::Instance()->RemoveClient(client);
+    ClientMan::Instance()->RemoveClient(client);
 }
 
-
-ClientMan::ClientMan()
-{
-	InitializeCriticalSection(&m_CSForClients);
-}
+ClientMan::ClientMan() { InitializeCriticalSection(&m_CSForClients); }
 
 ClientMan::~ClientMan()
 {
-	RemoveClients();
+    RemoveClients();
 
     DeleteCriticalSection(&m_CSForClients);
 }
 
-
 void ClientMan::AddClients(int numClients)
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	for( int i = 0; i < numClients ; ++ i )
-	{
+    for (int i = 0; i < numClients; ++i)
+    {
         Client* client = new Client();
 
-		if(client->Create(0))
-		{
-			m_listClient.push_back(client);
-		}
-		else
-		{
+        if (client->Create(0))
+        {
+            m_listClient.push_back(client);
+        }
+        else
+        {
             delete client;
-		}
-	}
+        }
+    }
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::ConnectClients(const char* ip, u_short port)
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	for(int i = 0 ; i != static_cast<int>(m_listClient.size()) ; ++i)
-	{
-		m_listClient[i]->PostConnect(ip, port);
-	}
+    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    {
+        m_listClient[i]->PostConnect(ip, port);
+    }
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::ShutdownClients()
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	for(int i = 0 ; i != static_cast<int>(m_listClient.size()) ; ++i)
-	{
-		m_listClient[i]->Shutdown();
-	}
+    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    {
+        m_listClient[i]->Shutdown();
+    }
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::RemoveClients()
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	for(int i = 0 ; i != static_cast<int>(m_listClient.size()) ; ++i)
-	{
+    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    {
         delete m_listClient[i];
-	}
-	m_listClient.clear();
+    }
+    m_listClient.clear();
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::Send(const std::string& msg)
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	for(int i = 0 ; i != static_cast<int>(m_listClient.size()) ; ++i)	
-	{
-		m_listClient[i]->PostSend(msg.c_str(), msg.length());
-	}
+    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    {
+        m_listClient[i]->PostSend(msg.c_str(), msg.length());
+    }
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::PostRemoveClient(Client* client)
 {
-	if(TrySubmitThreadpoolCallback(ClientMan::WorkerRemoveClient, client, NULL) == false)
-	{
-		ERROR_CODE(GetLastError(), "Could not start WorkerRemoveClient.");
+    if (TrySubmitThreadpoolCallback(ClientMan::WorkerRemoveClient, client, NULL) == false)
+    {
+        ERROR_CODE(GetLastError(), "Could not start WorkerRemoveClient.");
 
-		// This is not good. We should remove the client in a different thread to wait until its IO operations are complete.
-		// You need a fallback strategy. DO NOT JUST FOLLOW THIS EXAMPLE. YOU HAVE BEEN WARNED. 
-		RemoveClient(client);
-	}
+        // This is not good. We should remove the client in a different thread to wait until its IO
+        // operations are complete.
+        // You need a fallback strategy. DO NOT JUST FOLLOW THIS EXAMPLE. YOU HAVE BEEN WARNED.
+        RemoveClient(client);
+    }
 }
 
 void ClientMan::RemoveClient(Client* client)
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	ClientList::iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
+    ClientList::iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
 
-	if( itor != m_listClient.end() )
-	{
+    if (itor != m_listClient.end())
+    {
         delete *itor;
-		m_listClient.erase(itor);
-	}
+        m_listClient.erase(itor);
+    }
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 }
 
 size_t ClientMan::GetNumClients()
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	size_t num = m_listClient.size();
+    size_t num = m_listClient.size();
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 
-	return num;
+    return num;
 }
 
 bool ClientMan::IsAlive(const Client* client)
 {
-	EnterCriticalSection(&m_CSForClients);
+    EnterCriticalSection(&m_CSForClients);
 
-	ClientList::const_iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
-	bool result = itor != m_listClient.end();
+    ClientList::const_iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
+    bool result = itor != m_listClient.end();
 
-	LeaveCriticalSection(&m_CSForClients);
+    LeaveCriticalSection(&m_CSForClients);
 
-	return result;
+    return result;
 }

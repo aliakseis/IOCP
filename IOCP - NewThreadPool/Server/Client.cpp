@@ -4,46 +4,45 @@
 
 #include "common/CachedAlloc.h"
 
-namespace {
+Client::Client()
+    : m_pTPIO(NULL), m_Socket(INVALID_SOCKET), m_State(WAIT)
+{
+}
 
-CCachedAlloc clientAllocator(sizeof(Client));
-
+Client::~Client()
+{
+    Destroy();
 }
 
 
-/* static */ Client* Client::Create()
+bool Client::Create()
 {
-    Client* client = static_cast<Client*>(clientAllocator.get());
+	m_State = WAIT;
 
-	client->m_State = WAIT;
-
-	client->m_Socket = Network::CreateSocket(false, 0);
-	if(client->m_Socket == INVALID_SOCKET)
+	m_Socket = Network::CreateSocket(false, 0);
+	if(m_Socket == INVALID_SOCKET)
 	{
 		ERROR_MSG("Could not create socket.");		
-        clientAllocator.put(client);
-		return NULL;
+		return false;
 	}
-	return client;
+	return true;
 }
 
 
-/* static */ void Client::Destroy(Client* client)
+void Client::Destroy()
 {
-	if( client->m_Socket != INVALID_SOCKET )
+	if( m_Socket != INVALID_SOCKET )
 	{
-		Network::CloseSocket(client->m_Socket);
-		CancelIoEx(reinterpret_cast<HANDLE>(client->m_Socket), NULL);
-		client->m_Socket = INVALID_SOCKET;
-		client->m_State = DISCONNECTED;
+		Network::CloseSocket(m_Socket);
+		CancelIoEx(reinterpret_cast<HANDLE>(m_Socket), NULL);
+		m_Socket = INVALID_SOCKET;
+		m_State = DISCONNECTED;
 	}
 
-	if( client->m_pTPIO != NULL )
+	if( m_pTPIO != NULL )
 	{
-		WaitForThreadpoolIoCallbacks( client->m_pTPIO, true );
-		CloseThreadpoolIo( client->m_pTPIO );
-		client->m_pTPIO = NULL;
+		WaitForThreadpoolIoCallbacks( m_pTPIO, true );
+		CloseThreadpoolIo( m_pTPIO );
+		m_pTPIO = NULL;
 	}
-
-    clientAllocator.put(client);
 }
