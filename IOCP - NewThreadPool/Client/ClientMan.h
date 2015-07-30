@@ -2,7 +2,6 @@
 #include <winsock2.h>
 #include <vector>
 #include <string>
-#include <boost\pool\object_pool.hpp>
 
 #include "..\TSingleton.h"
 
@@ -36,9 +35,6 @@ private:
 private:
 	typedef vector<Client*> ClientList;
 	ClientList m_listClient;
-
-	typedef boost::object_pool<Client> PoolTypeClient;
-	PoolTypeClient m_PoolClient;
 
 	CRITICAL_SECTION m_CSForClients;
 };

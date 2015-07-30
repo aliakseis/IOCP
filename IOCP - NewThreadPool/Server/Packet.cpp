@@ -1,12 +1,16 @@
 #include "Packet.h"
 
-#include <boost/pool/singleton_pool.hpp>
+#include "../CachedAlloc.h"
 
-typedef boost::singleton_pool<Packet, sizeof(Packet)> PacketPool;
+namespace {
+
+CCachedAlloc packetAllocator(sizeof(Packet));
+
+}
 
 /* static */ Packet* Packet::Create(Client* sender, const BYTE* buff, DWORD size)
 {
-	Packet* packet = static_cast<Packet*>(PacketPool::malloc());
+    Packet* packet = static_cast<Packet*>(packetAllocator.get());
 	packet->m_Sender = sender; 
 	packet->m_Size = size;
 	CopyMemory(packet->m_Data, buff, size);
@@ -16,6 +20,6 @@ typedef boost::singleton_pool<Packet, sizeof(Packet)> PacketPool;
 
 /* static */ void Packet::Destroy(Packet* packet)
 {
-	PacketPool::free(packet);
+    packetAllocator.put(packet);
 }
 

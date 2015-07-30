@@ -5,12 +5,6 @@
 
 #include <cassert>
 
-namespace
-{
-	// Memory Pool for clients.
-	typedef boost::singleton_pool<Client, sizeof(Client)> PoolClient;
-}
-
 
 /* static */ void CALLBACK ClientMan::WorkerRemoveClient(PTP_CALLBACK_INSTANCE /* Instance */, PVOID Context)
 {
@@ -40,7 +34,7 @@ void ClientMan::AddClients(int numClients)
 
 	for( int i = 0; i < numClients ; ++ i )
 	{
-		Client* client = m_PoolClient.construct();
+        Client* client = new Client();
 
 		if(client->Create(0))
 		{
@@ -48,7 +42,7 @@ void ClientMan::AddClients(int numClients)
 		}
 		else
 		{
-			m_PoolClient.destroy(client);
+            delete client;
 		}
 	}
 
@@ -85,7 +79,7 @@ void ClientMan::RemoveClients()
 
 	for(int i = 0 ; i != static_cast<int>(m_listClient.size()) ; ++i)
 	{
-		m_PoolClient.destroy(m_listClient[i]);
+        delete m_listClient[i];
 	}
 	m_listClient.clear();
 
@@ -124,7 +118,7 @@ void ClientMan::RemoveClient(Client* client)
 
 	if( itor != m_listClient.end() )
 	{
-		m_PoolClient.destroy(*itor);
+        delete *itor;
 		m_listClient.erase(itor);
 	}
 

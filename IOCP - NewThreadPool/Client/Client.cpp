@@ -4,10 +4,11 @@
 #include "..\Log.h"
 #include "..\Network.h"
 
+#include "../CachedAlloc.h"
+
 #include <cassert>
 #include <iostream>
 #include <vector>
-#include <boost/pool/singleton_pool.hpp>
 
 using namespace std;
 
@@ -40,11 +41,11 @@ namespace
 	};
 
 	// use thread-safe memory pool
-	typedef boost::singleton_pool<IOEvent, sizeof(IOEvent)> IOEventPool;
+    CCachedAlloc eventAllocator(sizeof(IOEvent));
 
 	/* static */ IOEvent* IOEvent::Create(Client* client, Type type)
 	{
-		IOEvent* event = static_cast<IOEvent*>(IOEventPool::malloc());
+        IOEvent* event = static_cast<IOEvent*>(eventAllocator.get());
 		ZeroMemory(event, sizeof(IOEvent));
 		event->client = client;
 		event->type = type;
@@ -53,7 +54,7 @@ namespace
 
 	/* static */ void IOEvent::Destroy(IOEvent* event)
 	{
-		IOEventPool::free(event);
+        eventAllocator.put(event);
 	}
 
 	void PrintConnectionInfo(SOCKET socket)

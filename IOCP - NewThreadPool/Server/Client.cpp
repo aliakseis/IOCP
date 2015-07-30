@@ -2,14 +2,18 @@
 #include "..\Log.h"
 #include "..\Network.h"
 
-#include <boost/pool/singleton_pool.hpp>
+#include "../CachedAlloc.h"
 
-// use thread-safe memory pool
-typedef boost::singleton_pool<Client, sizeof(Client)> ClientPool;
+namespace {
+
+CCachedAlloc clientAllocator(sizeof(Client));
+
+}
+
 
 /* static */ Client* Client::Create()
 {
-	Client* client = static_cast<Client*>(ClientPool::malloc());
+    Client* client = static_cast<Client*>(clientAllocator.get());
 
 	client->m_State = WAIT;
 
@@ -17,7 +21,7 @@ typedef boost::singleton_pool<Client, sizeof(Client)> ClientPool;
 	if(client->m_Socket == INVALID_SOCKET)
 	{
 		ERROR_MSG("Could not create socket.");		
-		ClientPool::free(client);
+        clientAllocator.put(client);
 		return NULL;
 	}
 	return client;
@@ -41,5 +45,5 @@ typedef boost::singleton_pool<Client, sizeof(Client)> ClientPool;
 		client->m_pTPIO = NULL;
 	}
 
-	ClientPool::free(client);
+    clientAllocator.put(client);
 }

@@ -2,13 +2,17 @@
 #include "Client.h"
 #include "Packet.h"
 
-#include <boost/pool/singleton_pool.hpp>
+#include "../CachedAlloc.h"
 
-typedef boost::singleton_pool<IOEvent, sizeof(IOEvent)> IOEventPool;
+namespace {
+
+CCachedAlloc eventAllocator(sizeof(IOEvent));
+
+}
 
 /* static */ IOEvent* IOEvent::Create(Type type, Client* client, Packet* packet)
 {
-	IOEvent* event = static_cast<IOEvent*>(IOEventPool::malloc());
+    IOEvent* event = static_cast<IOEvent*>(eventAllocator.get());
 
 	ZeroMemory(event, sizeof(IOEvent));
 	event->m_Client = client;
@@ -20,6 +24,6 @@ typedef boost::singleton_pool<IOEvent, sizeof(IOEvent)> IOEventPool;
 
 /* static */ void IOEvent::Destroy(IOEvent* event)
 {
-	IOEventPool::free(event);
+    eventAllocator.put(event);
 }
 
