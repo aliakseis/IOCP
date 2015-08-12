@@ -29,7 +29,7 @@ namespace Log
 		vsnprintf_s(buffer, BUFFER_SIZE, BUFFER_SIZE-1, msg, args);
 		va_end(args);
 
-		cout << "File: " << fileName << "\nFunction: " << funcName << "\nLine: " << line \
+		cout << "File: " << fileName << "\nFunction: " << funcName << "\nLine: " << line
 			 << "\nError: " << buffer << endl;
 
 		LeaveCriticalSection(&logCS);
@@ -58,7 +58,7 @@ namespace Log
 		vsnprintf_s(buffer, BUFFER_SIZE, BUFFER_SIZE-1, msg, args);
 		va_end(args);		
 
-		cout << "File: " << fileName << "\nFunction: " << funcName << "\nLine: " << line \
+		cout << "File: " << fileName << "\nFunction: " << funcName << "\nLine: " << line
 			<< "\nError: " << buffer << "\nMsg: " << lpMessageBuffer << "Code: " << code << " 0x" << hex << code << endl;
 
 		cout << dec;

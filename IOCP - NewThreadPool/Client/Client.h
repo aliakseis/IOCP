@@ -22,7 +22,13 @@ public:
 	};
 
 private:
-	static void CALLBACK IoCompletionCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred, PTP_IO Io);
+	static void CALLBACK IoCompletionCallback(
+        PTP_CALLBACK_INSTANCE Instance,
+        PVOID Context,
+        PVOID Overlapped,
+        ULONG IoResult,
+        ULONG_PTR NumberOfBytesTransferred,
+        PTP_IO Io);
 
 public:
 	Client();

@@ -13,7 +13,13 @@ class Server :  public TSingleton<Server>
 {
 private:
 	// Callback Routine
-	static void CALLBACK IoCompletionCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred, PTP_IO Io);
+	static void CALLBACK IoCompletionCallback(
+        PTP_CALLBACK_INSTANCE Instance,
+        PVOID Context,
+        PVOID Overlapped,
+        ULONG IoResult,
+        ULONG_PTR NumberOfBytesTransferred,
+        PTP_IO Io);
 
 	// Worker Thread Functions
 	static void CALLBACK WorkerPostAccept(PTP_CALLBACK_INSTANCE /* Instance */, PVOID Context, PTP_WORK /* Work */);
