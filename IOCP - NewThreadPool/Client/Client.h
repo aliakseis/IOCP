@@ -55,4 +55,7 @@ private:
 	SOCKET m_Socket;
 	BYTE m_recvBuffer[MAX_RECV_BUFFER];
 	BYTE m_sendBuffer[MAX_SEND_BUFFER];
+
+    struct addrinfo* m_infoList;
+    struct addrinfo* m_info;
 };

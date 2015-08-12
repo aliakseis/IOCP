@@ -113,15 +113,57 @@ Client::IoCompletionCallback(PTP_CALLBACK_INSTANCE /* Instance */, PVOID /* Cont
     else
     {
         ERROR_CODE(IoResult, "I/O operation failed.");
-        ClientMan::Instance()->PostRemoveClient(event->client);
+
+        if (event->type == IOEvent::CONNECT 
+            && (event->client->m_info = event->client->m_info->ai_next) != NULL)
+        {
+            if (!Network::ConnectEx(
+                event->client->GetSocket(), 
+                event->client->m_info->ai_addr, 
+                event->client->m_info->ai_addrlen, 
+                &event->overlapped))
+            {
+                int error = WSAGetLastError();
+
+                if (error != ERROR_IO_PENDING)
+                {
+                    ERROR_CODE(IoResult, "I/O operation failed.");
+                    ClientMan::Instance()->PostRemoveClient(event->client);
+                }
+                else
+                {
+                    StartThreadpoolIo(event->client->m_pTPIO);
+                    return; // bypass Destroy()
+                }
+            }
+            else
+            {
+                event->client->OnConnect();
+            }
+        }
+        else
+        {
+            ClientMan::Instance()->PostRemoveClient(event->client);
+        }
     }
 
     IOEvent::Destroy(event);
 }
 
-Client::Client() : m_pTPIO(NULL), m_Socket(INVALID_SOCKET), m_State(WAIT) {}
+Client::Client() 
+    : m_pTPIO(NULL), 
+    m_Socket(INVALID_SOCKET), 
+    m_State(WAIT),
+    m_infoList(NULL),
+    m_info(NULL)
+{}
 
-Client::~Client() { Destroy(); }
+Client::~Client() 
+{ 
+    Destroy();
+    if (m_infoList)
+        freeaddrinfo(m_infoList);
+}
 
 bool Client::Create(short port)
 {
@@ -199,23 +241,26 @@ bool Client::PostConnect(const char* ip, short port)
         return false;
     }
 
-    struct addrinfo* infoList = NULL;
-    if (getaddrinfo(ip, portStr, &hints, &infoList) != 0)
+    m_infoList = NULL;
+    if (getaddrinfo(ip, portStr, &hints, &m_infoList) != 0)
     {
         ERROR_CODE(WSAGetLastError(), "getaddrinfo() failed.");
         return false;
     }
-
+  
     IOEvent* event = IOEvent::Create(this, IOEvent::CONNECT);
 
     // loop through all the results and connect to the first we can
-    struct addrinfo* info = infoList;
-    for (; info != NULL; info = info->ai_next)
+    m_info = m_infoList;
+    for (; m_info != NULL; m_info = m_info->ai_next)
     {
         StartThreadpoolIo(m_pTPIO);
 
-        if (Network::ConnectEx(m_Socket, info->ai_addr, info->ai_addrlen, &event->overlapped) ==
-            FALSE)
+        if (!Network::ConnectEx(
+            m_Socket, 
+            m_info->ai_addr, 
+            m_info->ai_addrlen, 
+            &event->overlapped))
         {
             int error = WSAGetLastError();
 
