@@ -5,6 +5,8 @@
 
 #include "common/Log.h"
 #include "common/Network.h"
+#include "common/CritSecLock.h"
+
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -479,7 +481,7 @@ void Server::RemoveClient(Client* client)
 {
     assert(client);
 
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     ClientList::iterator itor = std::find(m_Clients.begin(), m_Clients.end(), client);
 
@@ -491,8 +493,6 @@ void Server::RemoveClient(Client* client)
 
         m_Clients.erase(itor);
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void Server::Echo(Packet* packet)
@@ -500,7 +500,7 @@ void Server::Echo(Packet* packet)
     assert(packet);
     assert(packet->GetSender());
 
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     ClientList::iterator itor = std::find(m_Clients.begin(), m_Clients.end(), packet->GetSender());
 
@@ -513,19 +513,13 @@ void Server::Echo(Packet* packet)
     {
         PostSend(packet->GetSender(), packet);
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 size_t Server::GetNumClients()
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
-    size_t num = m_Clients.size();
-
-    LeaveCriticalSection(&m_CSForClients);
-
-    return num;
+    return m_Clients.size();
 }
 
 long Server::GetNumPostAccepts() { return m_NumPostAccept; }

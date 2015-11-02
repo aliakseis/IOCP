@@ -2,6 +2,7 @@
 #include "Client.h"
 
 #include "common/Log.h"
+#include "common/CritSecLock.h"
 
 #include <cassert>
 
@@ -25,7 +26,7 @@ ClientMan::~ClientMan()
 
 void ClientMan::AddClients(int numClients)
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     for (int i = 0; i < numClients; ++i)
     {
@@ -40,57 +41,47 @@ void ClientMan::AddClients(int numClients)
             delete client;
         }
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::ConnectClients(const char* ip, u_short port)
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
     {
         m_listClient[i]->PostConnect(ip, port);
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::ShutdownClients()
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
     {
         m_listClient[i]->Shutdown();
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::RemoveClients()
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
     {
         delete m_listClient[i];
     }
     m_listClient.clear();
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::Send(const std::string& msg)
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
     {
         m_listClient[i]->PostSend(msg.c_str(), msg.length());
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 void ClientMan::PostRemoveClient(Client* client)
@@ -108,7 +99,7 @@ void ClientMan::PostRemoveClient(Client* client)
 
 void ClientMan::RemoveClient(Client* client)
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     ClientList::iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
 
@@ -117,29 +108,19 @@ void ClientMan::RemoveClient(Client* client)
         delete *itor;
         m_listClient.erase(itor);
     }
-
-    LeaveCriticalSection(&m_CSForClients);
 }
 
 size_t ClientMan::GetNumClients()
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
-    size_t num = m_listClient.size();
-
-    LeaveCriticalSection(&m_CSForClients);
-
-    return num;
+    return m_listClient.size();
 }
 
 bool ClientMan::IsAlive(const Client* client)
 {
-    EnterCriticalSection(&m_CSForClients);
+    CritSecLock lock(m_CSForClients);
 
     ClientList::const_iterator itor = find(m_listClient.begin(), m_listClient.end(), client);
-    bool result = itor != m_listClient.end();
-
-    LeaveCriticalSection(&m_CSForClients);
-
-    return result;
+    return itor != m_listClient.end();
 }

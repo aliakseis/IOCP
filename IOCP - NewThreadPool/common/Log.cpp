@@ -5,6 +5,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "CritSecLock.h"
+
 using std::cout;
 using std::endl;
 using std::hex;
@@ -21,7 +23,7 @@ namespace Log
 
 	void Error(const char * fileName, const char * funcName, int line, const char * msg, ...)
 	{
-		EnterCriticalSection(&logCS);
+        CritSecLock lock(logCS);
 
 		static char buffer[BUFFER_SIZE] = {0,};
 		va_list args;
@@ -31,13 +33,11 @@ namespace Log
 
 		cout << "File: " << fileName << "\nFunction: " << funcName << "\nLine: " << line
 			 << "\nError: " << buffer << endl;
-
-		LeaveCriticalSection(&logCS);
 	}
 
 	void Error(const char * fileName, const char * funcName, int line, int code, const char * msg, ...)
 	{
-		EnterCriticalSection(&logCS);
+        CritSecLock lock(logCS);
 
 		char* lpMessageBuffer;
 
@@ -65,15 +65,13 @@ namespace Log
 
 		// Free the buffer allocated by the system.
 		LocalFree( lpMessageBuffer ); 
-
-		LeaveCriticalSection(&logCS);
 	}
 
 	void Trace(const char * msg, ...)
 	{
 		if( s_Enable )
 		{
-			EnterCriticalSection(&logCS);
+            CritSecLock lock(logCS);
 
 			static char buffer[BUFFER_SIZE] = {0,};
 			va_list args;
@@ -82,8 +80,6 @@ namespace Log
 			va_end(args);
 			
 			cout << buffer << endl;
-
-			LeaveCriticalSection(&logCS);
 		}
 	}
 

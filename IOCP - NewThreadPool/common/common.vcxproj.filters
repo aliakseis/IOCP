@@ -30,6 +30,9 @@
     <ClInclude Include="TSingleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CritSecLock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Log.cpp">
