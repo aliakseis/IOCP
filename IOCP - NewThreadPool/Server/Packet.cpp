@@ -4,7 +4,7 @@
 
 namespace {
 
-CCachedAlloc packetAllocator(sizeof(Packet));
+CachedAlloc packetAllocator(sizeof(Packet));
 
 }
 

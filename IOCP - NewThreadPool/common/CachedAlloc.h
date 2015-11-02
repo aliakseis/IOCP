@@ -3,10 +3,10 @@
 #include <windows.h>
 #include <malloc.h>
 
-class CCachedAlloc
+class CachedAlloc
 {
 public:
-	CCachedAlloc(size_t size)
+	CachedAlloc(size_t size)
 		: m_size(size)
 	{
 		if (m_size < sizeof(SLIST_ENTRY))
@@ -17,7 +17,7 @@ public:
 												MEMORY_ALLOCATION_ALIGNMENT);
 		InitializeSListHead(m_pListHead);
 	}
-	~CCachedAlloc()
+	~CachedAlloc()
 	{
 		 _aligned_free(m_pListHead);
 	}
@@ -39,14 +39,14 @@ public:
 		return result;
 	}
 
-	size_t getSize()
+	size_t getSize() const
 	{
 		return m_size;
 	}
 
 private:
-    CCachedAlloc(const CCachedAlloc&) = delete;
-    CCachedAlloc& operator = (const CCachedAlloc&) = delete;
+    CachedAlloc(const CachedAlloc&) = delete;
+    CachedAlloc& operator = (const CachedAlloc&) = delete;
 
 private:
 	size_t m_size;

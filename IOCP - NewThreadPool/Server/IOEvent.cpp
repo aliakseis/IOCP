@@ -6,7 +6,7 @@
 
 namespace {
 
-CCachedAlloc eventAllocator(sizeof(IOEvent));
+CachedAlloc eventAllocator(sizeof(IOEvent));
 
 }
 

@@ -39,7 +39,7 @@ class IOEvent
 };
 
 // use thread-safe memory pool
-CCachedAlloc eventAllocator(sizeof(IOEvent));
+CachedAlloc eventAllocator(sizeof(IOEvent));
 
 /* static */ IOEvent* IOEvent::Create(Client* client, Type type)
 {
