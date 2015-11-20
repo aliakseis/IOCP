@@ -38,6 +38,7 @@ public:
     Client& operator=(const Client&) = delete;
 
 	bool Create(short port);
+    void Close();
 	void Destroy();
 
 	bool PostConnect(const char* ip, short port);

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <winsock2.h>
 #include <vector>
 #include <string>
@@ -36,4 +37,6 @@ private:
 	ClientList m_listClient;
 
 	CRITICAL_SECTION m_CSForClients;
+
+    HANDLE m_hNoClients;
 };

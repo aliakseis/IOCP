@@ -15,7 +15,11 @@ ClientMan::WorkerRemoveClient(PTP_CALLBACK_INSTANCE /* Instance */, PVOID Contex
     ClientMan::Instance()->RemoveClient(client);
 }
 
-ClientMan::ClientMan() { InitializeCriticalSection(&m_CSForClients); }
+ClientMan::ClientMan()
+    : m_hNoClients(CreateEvent(NULL, TRUE, FALSE, NULL))
+{ 
+    InitializeCriticalSection(&m_CSForClients); 
+}
 
 ClientMan::~ClientMan()
 {
@@ -47,9 +51,9 @@ void ClientMan::ConnectClients(const char* ip, u_short port)
 {
     CritSecLock lock(m_CSForClients);
 
-    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    for (auto client : m_listClient)
     {
-        m_listClient[i]->PostConnect(ip, port);
+        client->PostConnect(ip, port);
     }
 }
 
@@ -57,30 +61,39 @@ void ClientMan::ShutdownClients()
 {
     CritSecLock lock(m_CSForClients);
 
-    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    for (auto client : m_listClient)
     {
-        m_listClient[i]->Shutdown();
+        client->Shutdown();
     }
 }
 
 void ClientMan::RemoveClients()
 {
-    CritSecLock lock(m_CSForClients);
-
-    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    EnterCriticalSection(&m_CSForClients);
+    for (auto client : m_listClient)
     {
-        delete m_listClient[i];
+        client->Close();
     }
-    m_listClient.clear();
+    const bool isEmpty = m_listClient.empty();
+    if (!isEmpty)
+    {
+        ResetEvent(m_hNoClients);
+    }
+    LeaveCriticalSection(&m_CSForClients);
+
+    if (!isEmpty)
+    {
+        WaitForSingleObject(m_hNoClients, INFINITE);
+    }
 }
 
 void ClientMan::Send(const std::string& msg)
 {
     CritSecLock lock(m_CSForClients);
 
-    for (int i = 0; i != static_cast<int>(m_listClient.size()); ++i)
+    for (auto client : m_listClient)
     {
-        m_listClient[i]->PostSend(msg.c_str(), msg.length());
+        client->PostSend(msg.c_str(), msg.length());
     }
 }
 
@@ -107,6 +120,11 @@ void ClientMan::RemoveClient(Client* client)
     {
         delete *itor;
         m_listClient.erase(itor);
+
+        if (m_listClient.empty())
+        {
+            SetEvent(m_hNoClients);
+        }
     }
 }
 

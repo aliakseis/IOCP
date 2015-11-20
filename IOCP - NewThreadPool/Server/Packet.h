@@ -15,8 +15,8 @@ public:
 	static void Destroy(Packet* packet);
 
 public:
-	Client* GetSender() { return m_Sender; }
-	DWORD GetSize() { return m_Size; }
+	Client* GetSender() const { return m_Sender; }
+    DWORD GetSize() const { return m_Size; }
 	BYTE* GetData() { return m_Data; }
 
 private:

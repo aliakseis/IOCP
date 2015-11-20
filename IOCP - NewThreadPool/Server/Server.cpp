@@ -218,9 +218,9 @@ void Server::Destroy()
     }
 
     EnterCriticalSection(&m_CSForClients);
-    for (ClientList::iterator itor = m_Clients.begin(); itor != m_Clients.end(); ++itor)
+    for (auto client : m_Clients)
     {
-        delete *itor;
+        delete client;
     }
     m_Clients.clear();
     LeaveCriticalSection(&m_CSForClients);

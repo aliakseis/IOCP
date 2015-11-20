@@ -7,12 +7,8 @@ class CachedAlloc
 {
 public:
 	CachedAlloc(size_t size)
-		: m_size(size)
+        : m_size(max(size, sizeof(SLIST_ENTRY)))
 	{
-		if (m_size < sizeof(SLIST_ENTRY))
-		{
-			m_size = sizeof(SLIST_ENTRY);
-		}
 		m_pListHead = (PSLIST_HEADER)_aligned_malloc(sizeof(SLIST_HEADER),
 												MEMORY_ALLOCATION_ALIGNMENT);
 		InitializeSListHead(m_pListHead);

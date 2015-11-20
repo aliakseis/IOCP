@@ -12,6 +12,7 @@
 
 namespace
 {
+
 class IOEvent
 {
    public:
@@ -90,7 +91,8 @@ Client::IoCompletionCallback(PTP_CALLBACK_INSTANCE /* Instance */, PVOID /* Cont
             break;
 
         case IOEvent::RECV:
-            if (NumberOfBytesTransferred > 0)
+            if (NumberOfBytesTransferred > 0 
+                && event->client->GetState() != CLOSED)
             {
                 event->client->OnRecv(NumberOfBytesTransferred);
             }
@@ -200,15 +202,20 @@ bool Client::Create(short port)
     return true;
 }
 
-void Client::Destroy()
+void Client::Close()
 {
     if (m_State != CLOSED)
     {
+        m_State = CLOSED;
         Network::CloseSocket(m_Socket);
         CancelIoEx(reinterpret_cast<HANDLE>(m_Socket), NULL);
         m_Socket = INVALID_SOCKET;
-        m_State = CLOSED;
     }
+}
+
+void Client::Destroy()
+{
+    Close();
 
     if (m_pTPIO != NULL)
     {
@@ -289,6 +296,12 @@ bool Client::PostConnect(const char* ip, short port)
 
 void Client::PostReceive()
 {
+    if (m_State == CLOSED)
+    {
+        ClientMan::Instance()->PostRemoveClient(this);
+        return;
+    }
+
     assert(m_State == CREATED || m_State == CONNECTED);
 
     WSABUF recvBufferDescriptor;
@@ -302,45 +315,34 @@ void Client::PostReceive()
 
     StartThreadpoolIo(m_pTPIO);
 
+    int error = 0;
     if (WSARecv(m_Socket, &recvBufferDescriptor, 1, &numberOfBytes, &recvFlags, &event->overlapped,
-                NULL) == SOCKET_ERROR)
+                NULL) == SOCKET_ERROR
+                && (error = WSAGetLastError()) != ERROR_IO_PENDING)
     {
-        int error = WSAGetLastError();
+        CancelThreadpoolIo(m_pTPIO);
 
-        if (error != ERROR_IO_PENDING)
+        if (m_State == CREATED)
         {
-            CancelThreadpoolIo(m_pTPIO);
-
-            if (m_State == CREATED)
-            {
-                // Even though we get successful connection event, if our first call of WSARecv
-                // failed, it means we failed in connecting.
-                ERROR_CODE(error, "Server cannot accept this connection.");
-            }
-            else
-            {
-                ERROR_CODE(error, "WSARecv() failed.");
-            }
-
-            Destroy();
+            // Even though we get successful connection event, if our first call of WSARecv
+            // failed, it means we failed in connecting.
+            ERROR_CODE(error, "Server cannot accept this connection.");
         }
         else
         {
-            // If this is the first call of WSARecv, we can now set the state CONNECTED.
-            if (m_State == CREATED)
-            {
-                PrintConnectionInfo(m_Socket);
-                m_State = CONNECTED;
-            }
+            ERROR_CODE(error, "WSARecv() failed.");
         }
+
+        // Error Handling
+        ClientMan::Instance()->PostRemoveClient(this);
     }
     else
     {
         // If this is the first call of WSARecv, we can now set the state CONNECTED.
         if (m_State == CREATED)
         {
-            PrintConnectionInfo(m_Socket);
             m_State = CONNECTED;
+            PrintConnectionInfo(m_Socket);
         }
 
         // In this case, the completion callback will have already been scheduled to be called.
@@ -358,7 +360,7 @@ void Client::PostSend(const char* buffer, unsigned int size)
     recvBufferDescriptor.buf = reinterpret_cast<char*>(m_sendBuffer);
     recvBufferDescriptor.len = size;
 
-    CopyMemory(m_sendBuffer, buffer, size);
+    memcpy(m_sendBuffer, buffer, size);
 
     DWORD numberOfBytes = size;
     DWORD sendFlags = 0;
@@ -379,8 +381,8 @@ void Client::PostSend(const char* buffer, unsigned int size)
 
             ERROR_CODE(error, "WSASend() failed.");
 
-            // Error Handling!!! //
-            Destroy();
+            // Error Handling
+            ClientMan::Instance()->PostRemoveClient(this);
         }
     }
     else
