@@ -20,7 +20,7 @@ public:
 
 	void put(void* pData)
 	{
-		InterlockedPushEntrySList(m_pListHead, (PSINGLE_LIST_ENTRY) pData);
+		InterlockedPushEntrySList(m_pListHead, (PSLIST_ENTRY) pData);
 	}
 
 	void* get()
